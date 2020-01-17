@@ -4,3 +4,14 @@
   </p>
 <button (click)="onLogout()">Log Out</button>
 </div>
+
+<div class="main">
+  <hr>
+  Time Now: {{now}} | {{now | date:'longDate'}} : {{now | date:'longTime'}} 
+
+  <hr>
+  Token Expires in: {{expiresIn}} | {{expiresIn | date:'longDate'}} : {{expiresIn | date:'longTime'}} 
+
+  <hr>
+
+</div>

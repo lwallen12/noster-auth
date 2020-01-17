@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+import * as jwt_decode from "jwt-decode";
+
 @Injectable({
   providedIn: 'root'
 })
@@ -39,6 +41,7 @@ logout() {
 }
 
 public get currentUserValue() {
+
   return this.currentUserSubject.value;
 }
 
