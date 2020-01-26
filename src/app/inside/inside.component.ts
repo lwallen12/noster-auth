@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 
 import * as jwt_decode from "jwt-decode";
+import { Idle, DEFAULT_INTERRUPTSOURCES } from '@ng-idle/core';
+import { Keepalive } from '@ng-idle/keepalive';
 
 @Component({
   selector: 'app-inside',
   templateUrl: './inside.component.html',
   styleUrls: ['./inside.component.css']
 })
-export class InsideComponent implements OnInit {
+export class InsideComponent implements OnInit, OnDestroy {
 
   now;
   expiresIn;
@@ -17,7 +19,78 @@ export class InsideComponent implements OnInit {
 
   uselessMessage = "This is a useless message just for practice from within setTimeout!";
 
-  constructor(private authService: AuthService, private router: Router) { }
+  idleState = 'Not started.';
+  timedOut = false;
+  lastPing?: Date = null;
+  title = 'angular-idle-timeout';
+
+  constructor(private authService: AuthService, 
+              private router: Router, 
+              private idle: Idle, 
+              private keepalive: Keepalive) {
+                
+              // sets an idle timeout of 5 seconds, for testing purposes.
+    idle.setIdle(5);
+    // sets a timeout period of 5 seconds. after 10 seconds of inactivity, the user will be considered timed out.
+    idle.setTimeout(5);
+    // sets the default interrupts, in this case, things like clicks, scrolls, touches to the document
+    idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
+
+    
+    this.onIdleEnd();
+    this.onIdleStart();
+    this.onTimeoutWarning();
+    this.onTimeoutWarning();
+
+    // sets the ping interval to 15 seconds
+    keepalive.interval(15);
+
+    keepalive.onPing.subscribe(() => this.lastPing = new Date());
+
+    this.idle.watch();
+
+
+               }
+
+      
+onIdleEnd() {
+      this.idle.onIdleEnd.subscribe(() => { 
+      this.idleState = 'No longer idle.'
+      console.log(this.idleState);
+      this.reset();
+    });
+  }
+
+  onIdleStart() {
+    this.idle.onIdleStart.subscribe(() => {
+      this.idleState = 'You\'ve gone idle!'
+      console.log(this.idleState);
+      //this.childModal.show();
+      alert("You are idle!");
+  });
+  }
+
+  onTimeoutWarning() {
+    this.idle.onTimeoutWarning.subscribe((countdown) => {
+      this.idleState = 'You will time out in ' + countdown + ' seconds!'
+      console.log(this.idleState);
+    });
+  }
+
+  onTimeout() {
+  this.idle.onTimeout.subscribe(() => {
+    this.idleState = 'Timed out!';
+    this.timedOut = true;
+    console.log(this.idleState);
+    this.router.navigate(['/']);
+  });
+}
+
+  reset() {
+    this.idle.watch();
+    this.idleState = 'Started.';
+  }
+
 
   ngOnInit() {
     this.getExpirations();
@@ -57,6 +130,10 @@ export class InsideComponent implements OnInit {
       }, this.authorizedTime); //chanage to 3000 if you wanna see it quicker that the 15 min
  
     console.log("Hello from mySetTimeout after setTimeout in code");
+  }
+
+  ngOnDestroy(): void {
+    this.idle.stop();
   }
 
 
