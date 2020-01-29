@@ -23,6 +23,8 @@ export class InsideComponent implements OnInit, OnDestroy {
   timedOut = false;
   lastPing?: Date = null;
   title = 'angular-idle-timeout';
+  isIdle: boolean = false;
+
 
   constructor(private authService: AuthService, 
               private router: Router, 
@@ -40,7 +42,7 @@ export class InsideComponent implements OnInit, OnDestroy {
     this.onIdleEnd();
     this.onIdleStart();
     this.onTimeoutWarning();
-    this.onTimeoutWarning();
+    this.onTimeout();
 
     // sets the ping interval to 15 seconds
     keepalive.interval(15);
@@ -58,6 +60,7 @@ onIdleEnd() {
       this.idleState = 'No longer idle.'
       console.log(this.idleState);
       this.reset();
+      this.isIdle = false;
     });
   }
 
@@ -66,7 +69,8 @@ onIdleEnd() {
       this.idleState = 'You\'ve gone idle!'
       console.log(this.idleState);
       //this.childModal.show();
-      alert("You are idle!");
+      //alert("You are idle!");
+      this.isIdle = true;
   });
   }
 
@@ -82,7 +86,7 @@ onIdleEnd() {
     this.idleState = 'Timed out!';
     this.timedOut = true;
     console.log(this.idleState);
-    this.router.navigate(['/']);
+    this.onLogout();
   });
 }
 

@@ -12,12 +12,14 @@ import { AuthInterceptor } from './auth/auth-interceptor';
 
 import { NgIdleKeepaliveModule } from '@ng-idle/keepalive'; // this includes the core NgIdleModule but includes keepalive providers for easy wireup
 import { MomentModule } from 'angular2-moment';
+import { AlertComponent } from './modals/alert.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AuthComponent,
-    InsideComponent
+    InsideComponent,
+    AlertComponent
   ],
   imports: [
     BrowserModule,

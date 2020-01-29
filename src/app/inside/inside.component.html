@@ -5,6 +5,8 @@
 <button (click)="onLogout()">Log Out</button>
 </div>
 
+<app-alert [message]="idleState" *ngIf="isIdle"></app-alert>
+
 <div class="main">
   <hr>
   Time Now: {{now}} | {{now | date:'longDate'}} : {{now | date:'longTime'}} 
