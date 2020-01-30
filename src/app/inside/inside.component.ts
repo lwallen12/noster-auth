@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 
 import * as jwt_decode from "jwt-decode";
 import { Idle, DEFAULT_INTERRUPTSOURCES } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
+import { tokenKey } from '@angular/core/src/view';
 
 @Component({
   selector: 'app-inside',
@@ -17,7 +18,7 @@ export class InsideComponent implements OnInit, OnDestroy {
   expiresIn;
   authorizedTime;
 
-  uselessMessage = "This is a useless message just for practice from within setTimeout!";
+  uselessMessage = "This is from within setTimeout. We are calling refresh token endpoint!";
 
   idleState = 'Not started.';
   timedOut = false;
@@ -25,10 +26,13 @@ export class InsideComponent implements OnInit, OnDestroy {
   title = 'angular-idle-timeout';
   isIdle: boolean = false;
 
+  myInterval;
+
 
   constructor(private authService: AuthService, 
               private router: Router, 
               private idle: Idle, 
+              private ngZone: NgZone,
               private keepalive: Keepalive) {
                 
               // sets an idle timeout of 5 seconds, for testing purposes.
@@ -54,6 +58,10 @@ export class InsideComponent implements OnInit, OnDestroy {
 
                }
 
+    public navigate(commands: any[]): void {
+    this.ngZone.run(() => this.router.navigate(commands)).then();
+}
+
       
 onIdleEnd() {
       this.idle.onIdleEnd.subscribe(() => { 
@@ -61,6 +69,8 @@ onIdleEnd() {
       console.log(this.idleState);
       this.reset();
       this.isIdle = false;
+
+      this.navigate(['/inside'])
     });
   }
 
@@ -99,7 +109,7 @@ onIdleEnd() {
   ngOnInit() {
     this.getExpirations();
 
-    this.mySetTimeout();
+    this.mySetInterval();
   }
 
   onLogout() {
@@ -126,20 +136,30 @@ onIdleEnd() {
   }
 
   //You need to use ArrowFunction ()=> to preserve this context within setTimeout
-  mySetTimeout() {
-      
+  mySetInterval() {      
     console.log("Hello from mySetTimeout before setTimeout in code");
-    setTimeout (() => {
+    this.myInterval = setInterval (() => {
          console.log(this.uselessMessage);
-      }, this.authorizedTime); //chanage to 3000 if you wanna see it quicker that the 15 min
- 
+        //TODO: Refresh, if not idle
+        
+        var token =  this.authService.refreshToken().subscribe(
+          data => {
+            console.log(data)
+          }
+        );
+        console.log(token);
+        
+      }, 10000); //chanage to 3000 if you wanna see it quicker that the 15 min
+      //Every 10 seconds, I want to call the refresh endpoint if we are not idle.
     console.log("Hello from mySetTimeout after setTimeout in code");
   }
 
+
   ngOnDestroy(): void {
+    this.idle.onIdleEnd.unsubscribe();
+    clearInterval(this.myInterval);
     this.idle.stop();
   }
-
 
   /*var inactivityTime = function () {
     var time;

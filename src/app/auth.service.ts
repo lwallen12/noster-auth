@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpRequest } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -34,6 +34,24 @@ login(login: Login) {
   }));
 }
 
+refreshToken() {
+
+  
+
+  return this.http.post<any>("http://localhost:57096/api/accounts/refresh", null, {headers:{ 'Authorization': 'Bearer ' + this.getAuthorizationToken() }, 
+  responseType:'text' as 'json' })
+    .pipe(map(user => {
+      localStorage.setItem('currentUser', user);
+
+    this.currentUserSubject.next(user);
+    
+    console.log("new user should be: ");
+    console.log(user);
+
+    return user;
+    }));
+  }
+
 logout() {
   // remove user from local storage and set current user to null
   localStorage.removeItem('currentUser');
@@ -46,11 +64,23 @@ public get currentUserValue() {
 }
 
   getAuthorizationToken() {
-    return "TODO";
+    return localStorage.getItem('currentUser');
   }
+
+
+  predictionURL = "http://localhost:57096/api/genericpredictions";
+
+  getRealPreds(): Observable<any[]> {
+    // var headers_object = {
+    //           headers: new HttpHeaders({ 'Authorization': 'Bearer ' + this.authService.getAuthToken()})
+    //         } 
+        return this.http.get<any[]>(this.predictionURL);
+  }
+
 }
 
 export class Login {
   email: string;
   password: string;
 }
+
